@@ -1140,6 +1140,7 @@ static chunk_t *align_var_def_brace(chunk_t *start, int span, int *p_nl_count)
 
    bool did_this_line = false;
    pc = chunk_get_next(start);
+   bool bGotComma = false;
    while ((pc != NULL) && ((pc->level >= start->level) || (pc->level == 0)))
    {
       if (chunk_is_comment(pc))
@@ -1185,6 +1186,7 @@ static chunk_t *align_var_def_brace(chunk_t *start, int span, int *p_nl_count)
          pc = align_var_def_brace(pc, span, &sub_nl_count);
          if (sub_nl_count > 0)
          {
+            bGotComma = false;
             fp_look_bro   = false;
             did_this_line = false;
             as.NewLines(sub_nl_count);
@@ -1210,7 +1212,12 @@ static chunk_t *align_var_def_brace(chunk_t *start, int span, int *p_nl_count)
       {
          fp_look_bro   = false;
          did_this_line = false;
-         as.NewLines(pc->nl_count);
+         int iNL_Count = pc->nl_count;
+         if ( bGotComma ) {  // if var definition contains comma separated lists on multiple lines don't count all newlines
+          --iNL_Count;
+          bGotComma = false;
+         }
+         if ( iNL_Count > 0 ) as.NewLines( iNL_Count );
          as_bc.NewLines(pc->nl_count);
          as_at.NewLines(pc->nl_count);
          as_br.NewLines(pc->nl_count);
